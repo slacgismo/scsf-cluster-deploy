@@ -12,8 +12,6 @@ TZ_LOOKUP = {
     'Pacific/Honolulu': 10
 }
 
-CLUSTER_IPS =
-
 def load_sys(n, fp=None, verbose=False):
     if fp is not None:
         base = fp
