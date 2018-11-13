@@ -70,17 +70,34 @@ def calc_deg(n, config):
     end = days[-1]
     D = df.loc[start:end].iloc[:-1].values.reshape(288, -1, order='F')
     ics = IterativeClearSky(D, k=4)
-    ics.minimize_objective(verbose=False, **config)
-    output = {
-        'deg': numpy.float(ics.beta.value),                             # note full name for numpy import
-        'res-median': ics.residuals_median,
-        'res-var': ics.residuals_variance,
-        'res-L0norm': ics.residual_l0_norm,
-        'solver-error': ics.isSolverError,
-        'f1-increase': ics.f1Increase,
-        'obj-increase': ics.objIncrease,
-        'fix-ts': ics.fixedTimeStamps
-    }
+    try:
+        ics.minimize_objective(verbose=False, **config)
+    except:
+        output = {
+            'deg': numpy.nan,
+            'res-median': numpy.nan,
+            'res-var': numpy.nan,
+            'res-L0norm': numpy.nan,
+            'solver-error': numpy.nan,
+            'f1-increase': numpy.nan,
+            'obj-increase': numpy.nan,
+            'fix-ts': numpy.nan
+        }
+    else:
+        try:
+            deg = numpy.float(ics.beta.value)
+        except:
+            deg = numpy.nan
+        output = {
+            'deg': deg,
+            'res-median': ics.residuals_median,
+            'res-var': ics.residuals_variance,
+            'res-L0norm': ics.residual_l0_norm,
+            'solver-error': ics.isSolverError,
+            'f1-increase': ics.f1Increase,
+            'obj-increase': ics.objIncrease,
+            'fix-ts': ics.fixedTimeStamps
+        }
     return output
 
 
