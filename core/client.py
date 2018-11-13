@@ -1,5 +1,7 @@
-from sys import path, argv
-path.append('/home/ubuntu/StatisticalClearSky/')
+from sys import path
+from os.path import expanduser
+#path.append('/home/ubuntu/StatisticalClearSky/')
+path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
 import pp
@@ -23,19 +25,15 @@ def load_sys(n, fp=None, verbose=False):
         base = fp
     else:
         base = 's3://pvinsight.nrel/PVO/'
-    try:
-        meta = pd.read_csv('local_data/sys_meta.csv')
-    except FileNotFoundError:
-        meta = pd.read_csv(base + 'sys_meta.csv')
-        meta.to_csv('local_data/sys_meta.csv')
+    meta = pandas.read_csv(base + 'sys_meta.csv')
     id = meta['ID'][n]
-    df = pd.read_csv(base+'PVOutput/{}.csv'.format(id), index_col=0,
+    df = pandas.read_csv(base+'PVOutput/{}.csv'.format(id), index_col=0,
                       parse_dates=[0], usecols=[1, 3])
     tz = meta['TimeZone'][n]
     df.index = df.index.tz_localize(tz).tz_convert('Etc/GMT+{}'.format(TZ_LOOKUP[tz]))   # fix daylight savings
     start = df.index[0]
     end = df.index[-1]
-    time_index = pd.date_range(start=start, end=end, freq='5min')
+    time_index = pandas.date_range(start=start, end=end, freq='5min')
     df = df.reindex(index=time_index, fill_value=0)
     if verbose:
         print(n, id)
@@ -60,9 +58,9 @@ def calc_deg(n, config):
     end = days[-1]
     D = df.loc[start:end].iloc[:-1].values.reshape(288, -1, order='F')
     ics = IterativeClearSky(D, k=4)
-    ics.minimize_objective(**config)
+    ics.minimize_objective(verbose=False, **config)
     output = {
-        'deg': np.float(ics.beta.value),
+        'deg': numpy.float(ics.beta.value),
         'res-median': ics.residuals_median,
         'res-var': ics.residuals_variance,
         'res-L0norm': ics.residual_l0_norm,
@@ -73,33 +71,53 @@ def calc_deg(n, config):
     }
     return output
 
+
 def main(ppservers, pswd, fn, partial=True):
     if partial:
-        file_indices = range(200, 204)
+        start = 150
+        stop = start + 2
+        file_indices = range(start, stop)
     else:
         file_indices = range(573)
-    job_server = pp.Server(ncpus=1, ppservers=ppservers, secret=pswd)
+    job_server = pp.Server(ppservers=ppservers, secret=pswd)
+    from numpy.random import random
     jobs = [
         (
             ind,
             job_server.submit(
                 calc_deg,
                 (ind, CONFIG1),
-                (load_sys,)
+                (load_sys, IterativeClearSky, ProblemStatusError, fix_time_shifts),
+                ("import pandas", "import numpy")
             )
         )
         for ind in file_indices
     ]
+
     output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
                                    'obj-increase', 'fix-ts'])
+
+    # output = pd.DataFrame(columns=['foo'])
+
     num = len(jobs)
     it = 0
+    progress(it, num, status='processing files')
     for ind, job in jobs:
         output.loc[ind] = job()
-        progress(it, num, status='processing files')
         it += 1
-    progress(it, num, status='complete')
-    output.to_csv( 's3://pvinsight.nrel/output/' + fn)
+        progress(it, num, status='processing files')
+    progress(it, num, status='complete              ')
+    home = expanduser('~')
+    with open(home + '/.aws/credentials') as f:
+        lns = f.readlines()
+        key = lns[1].split(' = ')[1].strip('\n')
+        secret = lns[2].split(' = ')[1].strip('\n')
+    bytes_to_write = output.to_csv(None).encode()
+    fs = s3fs.S3FileSystem(key=key, secret=secret)
+    with fs.open('s3://pvinsight.nrel/output/' + fn + '.csv', 'wb') as f:
+        f.write(bytes_to_write)
+    print('\n')
+    job_server.print_stats()
 
 
 
