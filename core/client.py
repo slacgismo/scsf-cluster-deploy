@@ -51,9 +51,11 @@ def main(ppservers, pswd, fn, partial=True):
     output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
                                    'obj-increase', 'fix-ts'])
     num = len(jobs)
+    it = 1
     for ind, job in jobs:
         output.loc[ind] = job()
-        progress(ind+1, num, status='processing files')
+        progress(it, num, status='processing files')
+        it += 1
     output.to_csv( 's3://pvinsight.nrel/output/' + fn)
 
 
