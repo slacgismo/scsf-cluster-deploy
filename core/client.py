@@ -84,7 +84,7 @@ def calc_deg(n, config):
     return output
 
 
-def main(ppservers, pswd, fn, partial=True):
+def main(ppservers, pswd, fn, partial=False):
     if partial:
         start = 150
         stop = start + 8
