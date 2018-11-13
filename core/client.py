@@ -1,4 +1,5 @@
-from sys import path, argv
+from sys import path
+from os.path import expanduser
 path.append('/home/ubuntu/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
@@ -151,7 +152,8 @@ def main(ppservers, pswd, fn, partial=True):
         progress(it, num, status='processing files')
         it += 1
     progress(it, num, status='complete              ')
-    with open('/Users/bennetmeyers/.aws/credentials') as f:
+    home = expanduser('~')
+    with open(home + '.aws/credentials') as f:
         lns = f.readlines()
         key = lns[1].split(' = ')[1].strip('\n')
         secret =﻿lns[2].split(' = ')[1].strip('\n')
