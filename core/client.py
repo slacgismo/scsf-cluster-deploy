@@ -73,6 +73,26 @@ def calc_deg(n, config):
     }
     return output
 
+def isprime(n):
+    """Returns True if n is prime and False otherwise"""
+    if not isinstance(n, int):
+        raise TypeError("argument passed to is_prime is not of 'int' type")
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    max = int(math.ceil(math.sqrt(n)))
+    i = 2
+    while i <= max:
+        if n % i == 0:
+            return False
+        i += 1
+    return True
+
+def sum_primes(n, config):
+    """Calculates sum of all primes below given integer n"""
+    return sum([x for x in range(2,n) if isprime(x)])
+
 def calc_deg2(n, config):
     output = {
         'deg': np.random.random(),
@@ -96,14 +116,15 @@ def main(ppservers, pswd, fn, partial=True):
         (
             ind,
             job_server.submit(
-                calc_deg2,
-                (ind, CONFIG1)
+                sum_primes,
+                (ind, CONFIG1),
+                (isprime,),
+                ("math",)
             )
         )
         for ind in file_indices
     ]
-    output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
-                                   'obj-increase', 'fix-ts'])
+
     # jobs = [
     #     (
     #         ind,
@@ -117,6 +138,12 @@ def main(ppservers, pswd, fn, partial=True):
     # ]
     # output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
     #                                'obj-increase', 'fix-ts'])
+
+    # output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
+    #                                'obj-increase', 'fix-ts'])
+
+    output = pd.DataFrame(columns=['sum_prime'])
+    
     num = len(jobs)
     it = 0
     for ind, job in jobs:
