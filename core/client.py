@@ -1,7 +1,7 @@
 from sys import path
 from os.path import expanduser
-#path.append('/home/ubuntu/StatisticalClearSky/')
-path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
+path.append('/home/ubuntu/StatisticalClearSky/')
+#path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
 import pp
@@ -91,7 +91,8 @@ def main(ppservers, pswd, fn, partial=True):
         file_indices = range(start, stop)
     else:
         file_indices = range(573)
-    job_server = pp.Server(ppservers=ppservers, secret=pswd)
+    # set ncpus=0 so that only remote nodes work on the problem
+    job_server = pp.Server(ncpus=0, ppservers=ppservers, secret=pswd)
     jobs = [
         (
             ind,
