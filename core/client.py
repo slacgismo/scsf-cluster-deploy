@@ -44,7 +44,7 @@ def load_sys(n, fp=None, verbose=False):
 
 def progress(count, total, status=''):
     """
-    Python command line progress bar in less than 10 lines of code. · GitHub
+    Python command line progress bar in less than 10 lines of code.
 
     https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
 
