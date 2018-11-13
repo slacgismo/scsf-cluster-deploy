@@ -2,7 +2,7 @@ from sys import path, argv
 path.append('/home/ubuntu/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
-from core.utilities import load_sys, progress
+from utilities import load_sys, progress
 import pp
 import numpy as np
 import pandas as pd
