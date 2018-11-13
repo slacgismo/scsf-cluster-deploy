@@ -5,7 +5,6 @@ path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
 import pp
-import numpy as np
 import s3fs
 import pandas as pd
 import sys
@@ -25,14 +24,17 @@ def load_sys(n, fp=None, verbose=False):
         base = fp
     else:
         base = 's3://pvinsight.nrel/PVO/'
+    # Weird quirk of pp is that some packages such as pandas an numpy need to use the full name for the import
     meta = pandas.read_csv(base + 'sys_meta.csv')
     id = meta['ID'][n]
+    # full name
     df = pandas.read_csv(base+'PVOutput/{}.csv'.format(id), index_col=0,
                       parse_dates=[0], usecols=[1, 3])
     tz = meta['TimeZone'][n]
     df.index = df.index.tz_localize(tz).tz_convert('Etc/GMT+{}'.format(TZ_LOOKUP[tz]))   # fix daylight savings
     start = df.index[0]
     end = df.index[-1]
+    # full name
     time_index = pandas.date_range(start=start, end=end, freq='5min')
     df = df.reindex(index=time_index, fill_value=0)
     if verbose:
@@ -41,6 +43,16 @@ def load_sys(n, fp=None, verbose=False):
 
 
 def progress(count, total, status=''):
+    """
+    Python command line progress bar in less than 10 lines of code. · GitHub
+
+    https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+
+    :param count: the current count, int
+    :param total: to total count, int
+    :param status: a message to display
+    :return:
+    """
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
 
@@ -60,7 +72,7 @@ def calc_deg(n, config):
     ics = IterativeClearSky(D, k=4)
     ics.minimize_objective(verbose=False, **config)
     output = {
-        'deg': numpy.float(ics.beta.value),
+        'deg': numpy.float(ics.beta.value),                             # note full name for numpy import
         'res-median': ics.residuals_median,
         'res-var': ics.residuals_variance,
         'res-L0norm': ics.residual_l0_norm,
@@ -80,7 +92,6 @@ def main(ppservers, pswd, fn, partial=True):
     else:
         file_indices = range(573)
     job_server = pp.Server(ppservers=ppservers, secret=pswd)
-    from numpy.random import random
     jobs = [
         (
             ind,
@@ -97,7 +108,6 @@ def main(ppservers, pswd, fn, partial=True):
     output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
                                    'obj-increase', 'fix-ts'])
 
-    # output = pd.DataFrame(columns=['foo'])
 
     num = len(jobs)
     it = 0
@@ -107,6 +117,8 @@ def main(ppservers, pswd, fn, partial=True):
         it += 1
         progress(it, num, status='processing files')
     progress(it, num, status='complete              ')
+    # See this SO post for info on how to write csv directly to s3 bucket:
+    # https://stackoverflow.com/questions/38154040/save-dataframe-to-csv-directly-to-s3-python
     home = expanduser('~')
     with open(home + '/.aws/credentials') as f:
         lns = f.readlines()
