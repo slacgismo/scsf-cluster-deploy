@@ -24,8 +24,8 @@ def sum_primes(n):
 
 
 # tuple of all parallel python servers to connect with
-#ppservers = ("*:35000",)
-ppservers = ("54.219.180.66:35000", "52.53.222.244:35000", "18.144.6.145:35000", "13.57.254.165:35000")
+ppservers = ()
+#ppservers = ("54.219.180.66:35000", "52.53.222.244:35000", "18.144.6.145:35000", "13.57.254.165:35000")
 #ppservers = ("10.0.0.1",)
 
 if len(sys.argv) > 1:
