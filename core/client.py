@@ -140,6 +140,7 @@ if __name__ == "__main__":
         ips = []
         for it in range(int(num_nodes)):
             ip = input('Enter IP address for node {}: '.format(it + 1))
+            ips.append(ip)
         ppservers = tuple((ip + ':35000' for ip in ips))
         pswd = input('What is the password? ')
     else:
