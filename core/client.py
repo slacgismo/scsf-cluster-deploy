@@ -143,15 +143,22 @@ def main(ppservers, pswd, fn, partial=True):
     #                                'obj-increase', 'fix-ts'])
 
     output = pd.DataFrame(columns=['sum_prime'])
-    
+
     num = len(jobs)
     it = 0
     for ind, job in jobs:
         output.loc[ind] = job()
         progress(it, num, status='processing files')
         it += 1
-    progress(it, num, status='complete')
-    output.to_csv( 's3://pvinsight.nrel/output/' + fn)
+    progress(it, num, status='complete              ')
+    with open('/Users/bennetmeyers/.aws/credentials') as f:
+        lns = f.readlines()
+        key = lns[1].split(' = ')[1].strip('\n')
+        secret =﻿lns[2].split(' = ')[1].strip('\n')
+    bytes_to_write = output.to_csv(None).encode()
+    fs = s3fs.S3FileSystem(key=key, secret=secret)
+    with fs.open('s3://pvinsight.nrel/output/' + fn + '.csv', 'wb') as f:
+        f.write(bytes_to_write)
 
 
 
