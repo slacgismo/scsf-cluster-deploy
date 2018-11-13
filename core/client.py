@@ -87,7 +87,7 @@ def calc_deg(n, config):
 def main(ppservers, pswd, fn, partial=True):
     if partial:
         start = 150
-        stop = start + 2
+        stop = start + 8
         file_indices = range(start, stop)
     else:
         file_indices = range(573)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     if int(num_nodes) > 0:
         ips = []
         for it in range(int(num_nodes)):
-            ip = input('Enter IP address for node {}'.format(it + 1))
+            ip = input('Enter IP address for node {}: '.format(it + 1))
         ppservers = tuple((ip + ':35000' for ip in ips))
         pswd = input('What is the password? ')
     else:
