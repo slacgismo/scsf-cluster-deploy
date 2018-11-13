@@ -1,8 +1,9 @@
 from sys import path
 from os.path import expanduser
 #path.append('/home/ubuntu/StatisticalClearSky/')
-#from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
-#from clearsky.utilities import CONFIG1
+path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
+from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
+from clearsky.utilities import CONFIG1
 import pp
 import numpy as np
 import s3fs
@@ -18,8 +19,6 @@ TZ_LOOKUP = {
     'America/Phoenix': 7,
     'Pacific/Honolulu': 10
 }
-
-CONFIG1 = TZ_LOOKUP
 
 def load_sys(n, fp=None, verbose=False):
     if fp is not None:
@@ -59,9 +58,9 @@ def calc_deg(n, config):
     end = days[-1]
     D = df.loc[start:end].iloc[:-1].values.reshape(288, -1, order='F')
     ics = IterativeClearSky(D, k=4)
-    ics.minimize_objective(**config)
+    ics.minimize_objective(verbose=False, **config)
     output = {
-        'deg': np.float(ics.beta.value),
+        'deg': numpy.float(ics.beta.value),
         'res-median': ics.residuals_median,
         'res-var': ics.residuals_variance,
         'res-L0norm': ics.residual_l0_norm,
@@ -75,7 +74,9 @@ def calc_deg(n, config):
 
 def main(ppservers, pswd, fn, partial=True):
     if partial:
-        file_indices = range(200, 204)
+        start = 150
+        stop = start + 2
+        file_indices = range(start, stop)
     else:
         file_indices = range(573)
     job_server = pp.Server(ppservers=ppservers, secret=pswd)
@@ -84,39 +85,28 @@ def main(ppservers, pswd, fn, partial=True):
         (
             ind,
             job_server.submit(
-                load_sys,
-                (ind,),
-                (),
-                ("import pandas",)
+                calc_deg,
+                (ind, CONFIG1),
+                (load_sys, IterativeClearSky, ProblemStatusError, fix_time_shifts),
+                ("import pandas", "import numpy")
             )
         )
         for ind in file_indices
     ]
 
-    # jobs = [
-    #     (
-    #         ind,
-    #         job_server.submit(
-    #             calc_deg,
-    #             (ind, CONFIG1),
-    #             (load_sys,)
-    #         )
-    #     )
-    #     for ind in file_indices
-    # ]
-    # output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
-    #                                'obj-increase', 'fix-ts'])
+    output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
+                                   'obj-increase', 'fix-ts'])
 
-    output = pd.DataFrame(columns=['foo'])
+    # output = pd.DataFrame(columns=['foo'])
 
     num = len(jobs)
     it = 0
+    progress(it, num, status='processing files')
     for ind, job in jobs:
-        output.loc[ind] = np.average(job())
-        progress(it, num, status='processing files')
+        output.loc[ind] = job()
         it += 1
+        progress(it, num, status='processing files')
     progress(it, num, status='complete              ')
-    print(output)
     home = expanduser('~')
     with open(home + '/.aws/credentials') as f:
         lns = f.readlines()
@@ -126,6 +116,8 @@ def main(ppservers, pswd, fn, partial=True):
     fs = s3fs.S3FileSystem(key=key, secret=secret)
     with fs.open('s3://pvinsight.nrel/output/' + fn + '.csv', 'wb') as f:
         f.write(bytes_to_write)
+    print('\n')
+    job_server.print_stats()
 
 
 
