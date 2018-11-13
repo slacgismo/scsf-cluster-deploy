@@ -73,6 +73,19 @@ def calc_deg(n, config):
     }
     return output
 
+def calc_deg2(n, config):
+    output = {
+        'deg': np.random.random(),
+        'res-median': np.random.random(),
+        'res-var': np.random.random(),
+        'res-L0norm': np.random.random(),
+        'solver-error': np.random.random(),
+        'f1-increase': np.random.random(),
+        'obj-increase': np.random.random(),
+        'fix-ts': np.random.random()
+    }
+    return output
+
 def main(ppservers, pswd, fn, partial=True):
     if partial:
         file_indices = range(200, 204)
@@ -83,15 +96,27 @@ def main(ppservers, pswd, fn, partial=True):
         (
             ind,
             job_server.submit(
-                calc_deg,
-                (ind, CONFIG1),
-                (load_sys,)
+                calc_deg2,
+                (ind, CONFIG1)
             )
         )
         for ind in file_indices
     ]
     output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
                                    'obj-increase', 'fix-ts'])
+    # jobs = [
+    #     (
+    #         ind,
+    #         job_server.submit(
+    #             calc_deg,
+    #             (ind, CONFIG1),
+    #             (load_sys,)
+    #         )
+    #     )
+    #     for ind in file_indices
+    # ]
+    # output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
+    #                                'obj-increase', 'fix-ts'])
     num = len(jobs)
     it = 0
     for ind, job in jobs:
