@@ -1,5 +1,6 @@
 import s3fs
 import pandas as pd
+import sys
 
 TZ_LOOKUP = {
     'America/Anchorage': 9,
@@ -10,6 +11,8 @@ TZ_LOOKUP = {
     'America/Phoenix': 7,
     'Pacific/Honolulu': 10
 }
+
+CLUSTER_IPS =
 
 def load_sys(n, fp=None, verbose=False):
     if fp is not None:
@@ -33,3 +36,14 @@ def load_sys(n, fp=None, verbose=False):
     if verbose:
         print(n, id)
     return df
+
+
+def progress(count, total, status=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+    sys.stdout.flush()
