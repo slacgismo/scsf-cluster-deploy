@@ -92,7 +92,11 @@ def main(ppservers, pswd, fn, partial=True):
     else:
         file_indices = range(573)
     # set ncpus=0 so that only remote nodes work on the problem
-    job_server = pp.Server(ncpus=0, ppservers=ppservers, secret=pswd)
+    if len(ppservers) > 0 :
+        ncpu = 0
+    else:
+        ncpu = 1
+    job_server = pp.Server(ncpus=ncpu, ppservers=ppservers, secret=pswd)
     jobs = [
         (
             ind,
