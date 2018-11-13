@@ -85,10 +85,7 @@ def main(ppservers, pswd, fn, partial=True):
             job_server.submit(
                 calc_deg,
                 (ind, CONFIG1),
-                (load_sys,),
-                ('from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts',
-                 'import pandas as pd', 'import numpy as np', 'from numpy.linalg import norm', 'import cvxpy as cvx',
-                 'from time import time', 's3fs')
+                (load_sys,)
             )
         )
         for ind in file_indices
