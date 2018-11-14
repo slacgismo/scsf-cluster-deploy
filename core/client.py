@@ -1,7 +1,7 @@
 from sys import path
 from os.path import expanduser
-#path.append('/home/ubuntu/StatisticalClearSky/')
-path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
+path.append('/home/ubuntu/StatisticalClearSky/')
+#path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
 from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
 from clearsky.utilities import CONFIG1
 import pp
@@ -44,7 +44,7 @@ def load_sys(n, fp=None, verbose=False):
 
 def progress(count, total, status=''):
     """
-    Python command line progress bar in less than 10 lines of code. · GitHub
+    Python command line progress bar in less than 10 lines of code.
 
     https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
 
@@ -70,28 +70,50 @@ def calc_deg(n, config):
     end = days[-1]
     D = df.loc[start:end].iloc[:-1].values.reshape(288, -1, order='F')
     ics = IterativeClearSky(D, k=4)
-    ics.minimize_objective(verbose=False, **config)
-    output = {
-        'deg': numpy.float(ics.beta.value),                             # note full name for numpy import
-        'res-median': ics.residuals_median,
-        'res-var': ics.residuals_variance,
-        'res-L0norm': ics.residual_l0_norm,
-        'solver-error': ics.isSolverError,
-        'f1-increase': ics.f1Increase,
-        'obj-increase': ics.objIncrease,
-        'fix-ts': ics.fixedTimeStamps
-    }
+    try:
+        ics.minimize_objective(verbose=False, **config)
+    except:
+        output = {
+            'deg': numpy.nan,
+            'res-median': numpy.nan,
+            'res-var': numpy.nan,
+            'res-L0norm': numpy.nan,
+            'solver-error': numpy.nan,
+            'f1-increase': numpy.nan,
+            'obj-increase': numpy.nan,
+            'fix-ts': numpy.nan
+        }
+    else:
+        try:
+            deg = numpy.float(ics.beta.value)
+        except:
+            deg = numpy.nan
+        output = {
+            'deg': deg,
+            'res-median': ics.residuals_median,
+            'res-var': ics.residuals_variance,
+            'res-L0norm': ics.residual_l0_norm,
+            'solver-error': ics.isSolverError,
+            'f1-increase': ics.f1Increase,
+            'obj-increase': ics.objIncrease,
+            'fix-ts': ics.fixedTimeStamps
+        }
     return output
 
 
-def main(ppservers, pswd, fn, partial=True):
+def main(ppservers, pswd, fn, partial=False):
     if partial:
         start = 150
-        stop = start + 2
+        stop = start + 8
         file_indices = range(start, stop)
     else:
         file_indices = range(573)
-    job_server = pp.Server(ppservers=ppservers, secret=pswd)
+    # set ncpus=0 so that only remote nodes work on the problem
+    if len(ppservers) > 0 :
+        ncpu = 0
+    else:
+        ncpu = 1
+    job_server = pp.Server(ncpus=ncpu, ppservers=ppservers, secret=pswd)
     jobs = [
         (
             ind,
@@ -138,7 +160,8 @@ if __name__ == "__main__":
     if int(num_nodes) > 0:
         ips = []
         for it in range(int(num_nodes)):
-            ip = input('Enter IP address for node {}'.format(it + 1))
+            ip = input('Enter IP address for node {}: '.format(it + 1))
+            ips.append(ip)
         ppservers = tuple((ip + ':35000' for ip in ips))
         pswd = input('What is the password? ')
     else:
