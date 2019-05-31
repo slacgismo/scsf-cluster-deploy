@@ -1,3 +1,11 @@
+"""Minimal pp example
+
+A minimal working example of pp.
+
+https://www.parallelpython.com/content/view/17/31/#SUM_PRIMES
+
+"""
+
 import math, sys, time
 import pp
 
