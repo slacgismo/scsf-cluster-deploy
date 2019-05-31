@@ -3,7 +3,7 @@
 Code for running SCSF on an AWS cluster
 
 #### Warning
- `pp` (parallel-python) cluster management is not currently working. Please use the script `bartch_run_pvo.py` instead. Instructions are in the docstring of the script.
+ `pp` (parallel-python) cluster management is not currently working. Please use the script `batch_run_pvo.py` instead. Instructions are in the docstring of the script.
 
 
 ## Setup
