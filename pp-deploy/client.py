@@ -1,13 +1,33 @@
 from sys import path
 from os.path import expanduser
-path.append('/home/ubuntu/StatisticalClearSky/')
-#path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
-from clearsky.main import IterativeClearSky, ProblemStatusError, fix_time_shifts
-from clearsky.utilities import CONFIG1
+#path.append('/home/ubuntu/StatisticalClearSky/')
+path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
+from statistical_clear_sky.algorithm.iterative_fitting import IterativeFitting
+from solardatatools import standardize_time_axis, make_2d, fix_time_shifts
 import pp
 import s3fs
-import pandas as pd
+import pandas
+import numpy
 import sys
+
+from statistical_clear_sky.algorithm.time_shift.clustering\
+import ClusteringTimeShift
+from\
+ statistical_clear_sky.algorithm.initialization.singular_value_decomposition\
+ import SingularValueDecomposition
+from statistical_clear_sky.algorithm.initialization.linearization_helper\
+ import LinearizationHelper
+from statistical_clear_sky.algorithm.initialization.weight_setting\
+ import WeightSetting
+from statistical_clear_sky.algorithm.exception import ProblemStatusError
+from statistical_clear_sky.algorithm.minimization.left_matrix\
+ import LeftMatrixMinimization
+from statistical_clear_sky.algorithm.minimization.right_matrix\
+ import RightMatrixMinimization
+from statistical_clear_sky.algorithm.serialization.state_data import StateData
+from statistical_clear_sky.algorithm.serialization.serialization_mixin\
+ import SerializationMixin
+from statistical_clear_sky.algorithm.plot.plot_mixin import PlotMixin
 
 TZ_LOOKUP = {
     'America/Anchorage': 9,
@@ -31,15 +51,14 @@ def load_sys(n, fp=None, verbose=False):
     df = pandas.read_csv(base+'PVOutput/{}.csv'.format(id), index_col=0,
                       parse_dates=[0], usecols=[1, 3])
     tz = meta['TimeZone'][n]
-    df.index = df.index.tz_localize(tz).tz_convert('Etc/GMT+{}'.format(TZ_LOOKUP[tz]))   # fix daylight savings
-    start = df.index[0]
-    end = df.index[-1]
-    # full name
-    time_index = pandas.date_range(start=start, end=end, freq='5min')
-    df = df.reindex(index=time_index, fill_value=0)
+    df.index = df.index\
+        .tz_localize(tz)\
+        .tz_convert('Etc/GMT+{}'.format(TZ_LOOKUP[tz]))\
+        .tz_localize(None)   # fix daylight savings
+    data = fix_time_shifts(make_2d(standardize_time_axis(df), key='Power(W)'), verbose=False, c1=5.)
     if verbose:
         print(n, id)
-    return df
+    return data
 
 
 def progress(count, total, status=''):
@@ -63,48 +82,46 @@ def progress(count, total, status=''):
     sys.stdout.flush()
 
 
-def calc_deg(n, config):
-    df = load_sys(n, verbose=False)
-    days = df.resample('D').max().index[1:-1]
-    start = days[0]
-    end = days[-1]
-    D = df.loc[start:end].iloc[:-1].values.reshape(288, -1, order='F')
-    ics = IterativeClearSky(D, k=4)
+def calc_deg(n):
+    power_signals_d = load_sys(n, verbose=False)
+    scsf = IterativeFitting(power_signals_d, rank_k=6, solver_type='MOSEK',
+                            auto_fix_time_shifts=False)
     try:
-        ics.minimize_objective(verbose=False, **config)
+        scsf.execute(mu_l=5e2, mu_r=1e3, tau=0.85, max_iteration=10,
+                     exit_criterion_epsilon=5e-3,
+                     max_degradation=None, min_degradation=None,
+                     verbose=False)
     except:
         output = {
-            'deg': numpy.nan,
+            'deg': numpy.nan,                             # note full name for numpy import
             'res-median': numpy.nan,
             'res-var': numpy.nan,
             'res-L0norm': numpy.nan,
             'solver-error': numpy.nan,
             'f1-increase': numpy.nan,
-            'obj-increase': numpy.nan,
-            'fix-ts': numpy.nan
+            'obj-increase': numpy.nan
         }
     else:
         try:
-            deg = numpy.float(ics.beta.value)
+            deg = numpy.float(scsf.beta_value.item())
         except:
             deg = numpy.nan
         output = {
-            'deg': deg,
-            'res-median': ics.residuals_median,
-            'res-var': ics.residuals_variance,
-            'res-L0norm': ics.residual_l0_norm,
-            'solver-error': ics.isSolverError,
-            'f1-increase': ics.f1Increase,
-            'obj-increase': ics.objIncrease,
-            'fix-ts': ics.fixedTimeStamps
+            'deg':deg,                             # note full name for numpy import
+            'res-median': scsf.residuals_median,
+            'res-var': scsf.residuals_variance,
+            'res-L0norm': scsf.residual_l0_norm,
+            'solver-error': scsf.state_data.is_solver_error,
+            'f1-increase': scsf.state_data.f1_increase,
+            'obj-increase': scsf.state_data.obj_increase
         }
     return output
 
 
-def main(ppservers, pswd, fn, partial=False):
+def main(ppservers, pswd, fn, partial=True):
     if partial:
         start = 150
-        stop = start + 8
+        stop = start + 2
         file_indices = range(start, stop)
     else:
         file_indices = range(573)
@@ -119,15 +136,19 @@ def main(ppservers, pswd, fn, partial=False):
             ind,
             job_server.submit(
                 calc_deg,
-                (ind, CONFIG1),
-                (load_sys, IterativeClearSky, ProblemStatusError, fix_time_shifts),
+                (ind,),
+                (load_sys, IterativeFitting, fix_time_shifts, SerializationMixin,
+                 ClusteringTimeShift, SingularValueDecomposition,
+                 LinearizationHelper, WeightSetting, ProblemStatusError,
+                 LeftMatrixMinimization, RightMatrixMinimization, StateData,
+                 PlotMixin),
                 ("import pandas", "import numpy")
             )
         )
         for ind in file_indices
     ]
 
-    output = pd.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
+    output = pandas.DataFrame(columns=['deg', 'res-median', 'res-var', 'res-L0norm', 'solver-error', 'f1-increase',
                                    'obj-increase', 'fix-ts'])
 
 
