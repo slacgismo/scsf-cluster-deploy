@@ -14,13 +14,13 @@ import pickle
 from time import time
 
 GROUPS = {
-    0: [0, 1, 2],
-    1: [4, 5, 14],
-    2: [6, 7],
-    3: [8, 10, 20],
-    4: [9],
-    5: [12, 13, 26],
-    6: [3, 11],
+    1: [0, 1, 2],
+    2: [4, 5, 14],
+    3: [6, 7],
+    4: [8, 10, 20],
+    5: [9],
+    6: [12, 13, 26],
+    7: [3, 11],
 }
 #DATA_DIR = '/home/ubuntu/data/'
 DATA_DIR = '/Users/bennetmeyers/Documents/PVInsight/IEA_PVPC_Task13/'
