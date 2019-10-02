@@ -110,8 +110,9 @@ def main(group_id, data_dir=DATA_DIR):
                 sys_id, j, deg_avg, deg_g_ub, deg_g_lb, deg_med,
                 deg_p_ub, deg_p_lb
             ]
+            analysis_output.to_csv(
+                'pvps_deg_analysis_batch_{}'.format(group_id))
             count += 1
-    analysis_output.to_csv('pvps_deg_analysis_batch_{}'.format(group_id))
     tn = time()
     progress(count, total, status=' {:.2f} min DONE!          '.format(
                 (tn - ti) / 60
