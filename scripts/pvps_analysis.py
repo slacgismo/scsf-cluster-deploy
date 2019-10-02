@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import sys
 import pickle
+from glob import glob
 from time import time
 
 GROUPS = {
@@ -66,6 +67,7 @@ def main(group_id, data_dir=DATA_DIR):
     summary_table = pd.read_csv(data_dir + 'pvps_summary_v2.csv', index_col=0)
     total = get_group_total(group_id, summary_table)
     count = 0
+    cache_list = glob('*.scsf')
     ti = time()
     for sys_id in sys_ids:
         df, use_cols = load_table(sys_id)
@@ -76,7 +78,10 @@ def main(group_id, data_dir=DATA_DIR):
                 (tn - ti) / 60, sys_id, col
             ))
             dh.run_pipeline(use_col=col, verbose=False)
-            scsf = IterativeFitting(data_handler_obj=dh, rank_k=6,
+            if 'pvps{:02}_{}.scsf'.format(sys_id, j) in cache_list:
+                scsf = IterativeFitting.load_instance('pvps{:02}_{}.scsf'.format(sys_id, j))
+            else:
+                scsf = IterativeFitting(data_handler_obj=dh, rank_k=6,
                                     solver_type='MOSEK')
             try:
                 scsf.execute(max_iteration=20, non_neg_constraints=False, mu_l=1e5,
@@ -90,7 +95,7 @@ def main(group_id, data_dir=DATA_DIR):
                 deg_p_lb = np.nan
             else:
                 scsf.save_instance('pvps{:02}_{}.scsf'.format(sys_id, j))
-                with open('pvps{:02}_bootstraps.pkl'.format(sys_id),
+                with open('pvps{:02}_{}_bootstraps.pkl'.format(sys_id, j),
                           'wb+') as f:
                     pickle.dump(dict(scsf.bootstrap_samples), f)
                 bootstrap_samples = dict(scsf.bootstrap_samples)
