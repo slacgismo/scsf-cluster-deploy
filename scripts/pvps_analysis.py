@@ -1,8 +1,8 @@
 
 from os.path import expanduser
 from sys import path
-#path.append('/home/ubuntu/StatisticalClearSky/')
-path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
+path.append('/home/ubuntu/StatisticalClearSky/')
+#path.append('/Users/bennetmeyers/Documents/ClearSky/StatisticalClearSky/')
 from statistical_clear_sky import IterativeFitting
 from solardatatools import DataHandler
 from solardatatools.utilities import progress
@@ -22,8 +22,8 @@ GROUPS = {
     6: [12, 13, 26],
     7: [3, 11],
 }
-#DATA_DIR = '/home/ubuntu/data/'
-DATA_DIR = '/Users/bennetmeyers/Documents/PVInsight/IEA_PVPC_Task13/'
+DATA_DIR = '/home/ubuntu/data/'
+#DATA_DIR = '/Users/bennetmeyers/Documents/PVInsight/IEA_PVPC_Task13/'
 
 POWER_PATTERNS = [
     'power',
