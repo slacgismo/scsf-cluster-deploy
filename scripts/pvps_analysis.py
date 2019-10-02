@@ -114,6 +114,4 @@ def main(group_id, data_dir=DATA_DIR):
 
 if __name__ == "__main__":
     group_id = int(sys.argv[1])
-    df, use_cols = load_table(GROUPS[group_id][0])
-    print(use_cols)
-    print(df.head())
+    main(group_id)
