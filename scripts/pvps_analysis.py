@@ -22,6 +22,8 @@ GROUPS = {
     5: [9],
     6: [12, 13, 26],
     7: [3, 11],
+    8: [10]
+    9: [20]
 }
 DATA_DIR = '/home/ubuntu/data/'
 #DATA_DIR = '/Users/bennetmeyers/Documents/PVInsight/IEA_PVPC_Task13/'
