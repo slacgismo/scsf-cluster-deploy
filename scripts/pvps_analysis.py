@@ -24,7 +24,10 @@ GROUPS = {
     7: [3, 11],
     8: [10],
     9: [20],
-    10: [8]
+    10: [8],
+    11: [9],
+    12: [9],
+    13: [9]
 
 }
 DATA_DIR = '/home/ubuntu/data/'
@@ -78,6 +81,12 @@ def main(group_id, data_dir=DATA_DIR):
         dh = DataHandler(df)
         for j, col in enumerate(use_cols):
             if group_id == 10 and j != 2:
+                continue
+            if group_id == 11 and j not in [2, 3]:
+                continue
+            if group_id == 12 and j not in [4, 5]:
+                continue
+            if group_id == 13 and j not in [6, 7]:
                 continue
             tn = time()
             progress(count, total, status=' {:.2f} min {} {}'.format(
