@@ -23,7 +23,9 @@ GROUPS = {
     6: [12, 13, 26],
     7: [3, 11],
     8: [10],
-    9: [20]
+    9: [20],
+    10: [8]
+
 }
 DATA_DIR = '/home/ubuntu/data/'
 #DATA_DIR = '/Users/bennetmeyers/Documents/PVInsight/IEA_PVPC_Task13/'
@@ -75,6 +77,8 @@ def main(group_id, data_dir=DATA_DIR):
         df, use_cols = load_table(sys_id)
         dh = DataHandler(df)
         for j, col in enumerate(use_cols):
+            if group_id == 10 and j != 2:
+                continue
             tn = time()
             progress(count, total, status=' {:.2f} min {} {}'.format(
                 (tn - ti) / 60, sys_id, col
