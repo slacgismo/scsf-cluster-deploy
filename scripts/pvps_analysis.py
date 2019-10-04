@@ -133,6 +133,35 @@ def main(group_id, data_dir=DATA_DIR):
                 (tn - ti) / 60
             ))
 
+def main2(sysid, colid):
+    sys_id = sysid
+    j = colid
+    df, use_cols = load_table(sys_id)
+    col = use_cols[j]
+    print(sys_id, col)
+    dh = DataHandler(df)
+    dh.run_pipeline(use_col=col)
+    if 'pvps{:02}_{}.scsf'.format(sys_id, j) in cache_list:
+        scsf = IterativeFitting.load_instance(
+            'pvps{:02}_{}.scsf'.format(sys_id, j))
+    else:
+        scsf = IterativeFitting(data_handler_obj=dh, rank_k=6,
+                                solver_type='MOSEK')
+    try:
+        scsf.execute(max_iteration=20, non_neg_constraints=False, mu_l=1e5,
+                     bootstraps=50, exit_criterion_epsilon=5e-3, verbose=True)
+    except:
+        print('failed!')
+    else:
+        scsf.save_instance('pvps{:02}_{}.scsf'.format(sys_id, j))
+        with open('pvps{:02}_{}_bootstraps.pkl'.format(sys_id, j),
+                  'wb+') as f:
+            pickle.dump(dict(scsf.bootstrap_samples), f)
+
+
 if __name__ == "__main__":
-    group_id = int(sys.argv[1])
-    main(group_id)
+    #group_id = int(sys.argv[1])
+    #main(group_id)
+    sysid = int(sys.argv[1])
+    colid = int(sys.argv[2]) - 1
+    main2(sysid, colid)
