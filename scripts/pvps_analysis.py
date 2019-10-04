@@ -141,11 +141,11 @@ def main2(sysid, colid):
     print(sys_id, col)
     dh = DataHandler(df)
     dh.run_pipeline(use_col=col)
-    if 'pvps{:02}_{}.scsf'.format(sys_id, j) in cache_list:
-        scsf = IterativeFitting.load_instance(
-            'pvps{:02}_{}.scsf'.format(sys_id, j))
-    else:
-        scsf = IterativeFitting(data_handler_obj=dh, rank_k=6,
+    # if 'pvps{:02}_{}.scsf'.format(sys_id, j) in cache_list:
+    #     scsf = IterativeFitting.load_instance(
+    #         'pvps{:02}_{}.scsf'.format(sys_id, j))
+    # else:
+    scsf = IterativeFitting(data_handler_obj=dh, rank_k=6,
                                 solver_type='MOSEK')
     try:
         scsf.execute(max_iteration=20, non_neg_constraints=False, mu_l=1e5,
