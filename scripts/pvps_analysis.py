@@ -25,7 +25,7 @@ GROUPS = {
     8: [10],
     9: [20],
     10: [8],
-    11: [9],
+    11: [8],
     12: [9],
     13: [9]
 
@@ -80,9 +80,9 @@ def main(group_id, data_dir=DATA_DIR):
         df, use_cols = load_table(sys_id)
         dh = DataHandler(df)
         for j, col in enumerate(use_cols):
-            if group_id == 10 and j != 2:
+            if group_id == 10 and j != 0:
                 continue
-            if group_id == 11 and j not in [2, 3]:
+            if group_id == 11 and j != 2:
                 continue
             if group_id == 12 and j not in [4, 5]:
                 continue
