@@ -27,7 +27,7 @@ GROUPS = {
     10: [8],
     11: [8],
     12: [6],
-    13: [9]
+    13: [6]
 
 }
 DATA_DIR = '/home/ubuntu/data/'
@@ -86,7 +86,7 @@ def main(group_id, data_dir=DATA_DIR):
                 continue
             if group_id == 12 and j != 0:
                 continue
-            if group_id == 13 and j not in [6, 7]:
+            if group_id == 13 and j != 3:
                 continue
             tn = time()
             progress(count, total, status=' {:.2f} min {} {}'.format(
