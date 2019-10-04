@@ -26,7 +26,7 @@ GROUPS = {
     9: [20],
     10: [8],
     11: [8],
-    12: [9],
+    12: [6],
     13: [9]
 
 }
@@ -84,7 +84,7 @@ def main(group_id, data_dir=DATA_DIR):
                 continue
             if group_id == 11 and j != 2:
                 continue
-            if group_id == 12 and j not in [4, 5]:
+            if group_id == 12 and j != 0:
                 continue
             if group_id == 13 and j not in [6, 7]:
                 continue
